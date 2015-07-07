@@ -12,7 +12,6 @@ typealias TrackArtist = String
 typealias TrackTitle = String
 
 enum PlaylistItem {
-    case Artist(String)
     case PlaylistTitle(String)
     case Track(TrackArtist,TrackTitle)
 }
