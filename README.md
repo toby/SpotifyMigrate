@@ -4,6 +4,8 @@
 Spotify has a playlist API but unfortunately it's broken and doesn't
 support pagination. This is a workaround for exporting all playlists.
 
+[Example Output](https://gist.github.com/toby/07ae152682fbd513ccbe)
+
 ## Usage
 1. Create an empty RTF file in TextEdit.
 2. Enter the name of each playlist on its own line.
