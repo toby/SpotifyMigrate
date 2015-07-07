@@ -8,9 +8,13 @@
 
 import Foundation
 
+typealias TrackArtist = String
+typealias TrackTitle = String
+
 enum PlaylistItem {
-    case Title(String)
-    case Track(String,String)
+    case Artist(String)
+    case PlaylistTitle(String)
+    case Track(TrackArtist,TrackTitle)
 }
 
 typealias Playlist = [PlaylistItem]
@@ -42,12 +46,31 @@ func tokenLineToPlaylistItem(tokens: TokenLine) -> PlaylistItem? {
     case 0:
         return nil
     case 1:
-        return .Title(tokens[0])
+        return .PlaylistTitle(tokens[0])
     case 2:
         return .Track(tokens[1], tokens[0]) // flip artist and track since spotify exports it backwards
     default:
         return nil
     }
+}
+
+func reducePlaylistItems(var res: [Playlist], item: PlaylistItem) -> [Playlist] {
+    switch(item) {
+    case .PlaylistTitle(_):
+        res.insert([item], atIndex: 0)
+        return res
+    case .Track(_,_):
+        var lastPlaylist = res[0]
+        lastPlaylist.append(item)
+        res[0] = lastPlaylist
+        return res
+    default:
+        return res
+    }
+}
+
+func playlistItemsToPlaylists(items: [PlaylistItem]) -> [Playlist] {
+    return items.reduce([Playlist](), combine: reducePlaylistItems).reverse()
 }
 
 func decodeDataToPlaylists(data: NSData) -> [PlaylistItem] {
@@ -60,19 +83,26 @@ func renderPlaylistItem(item: PlaylistItem, formatter: PlaylistItem -> String) -
     return formatter(item)
 }
 
-func renderPlaylistItems(items: [PlaylistItem], formatter: PlaylistItem -> String) -> String {
-    return "\n".join(items.map({renderPlaylistItem($0, formatter: formatter)}))
+func renderPlaylist(playlist: Playlist, formatter: PlaylistItem -> String) -> String {
+    return "\n".join(playlist.map({renderPlaylistItem($0, formatter: formatter)}))
+}
+
+func renderPlaylists(playlists: [Playlist], formatter: PlaylistItem -> String) -> String {
+    return "\n\n".join(playlists.map({renderPlaylist($0, formatter: formatter)}))
 }
 
 func mdFormat(item: PlaylistItem) -> String {
     switch(item) {
-    case .Title(let title):
-        return "\n## \(title)"
+    case .PlaylistTitle(let title):
+        return "## \(title)"
     case .Track(let artist, let track):
         return "* \(artist) - \(track)"
+    default:
+        return ""
     }
 }
 
 let data = NSFileHandle.fileHandleWithStandardInput().availableData
 let playlistItems = decodeDataToPlaylists(data)
-print(renderPlaylistItems(playlistItems, formatter: mdFormat))
+let playlists = playlistItemsToPlaylists(playlistItems)
+print(renderPlaylists(playlists, formatter: mdFormat))
