@@ -32,12 +32,12 @@ func tokenizeCharacterView(characterView: String.CharacterView) -> Token {
 }
 
 func tokenizeLine(line: String.CharacterView) -> TokenLine {
-    return split(line) {return $0 == tokenDelimiter}.map(tokenizeCharacterView)
+    return split(line) {$0 == tokenDelimiter}.map(tokenizeCharacterView)
 }
 
 func tokenizeData(data: NSData) -> TokenFile {
     let input = NSString(data: data, encoding: NSUTF8StringEncoding) as! String
-    return split(input.characters) {return $0 == "\n"}.map(tokenizeLine)
+    return split(input.characters) {$0 == "\n"}.map(tokenizeLine)
 }
 
 func tokenLineToPlaylistItem(tokens: TokenLine) -> PlaylistItem? {
@@ -63,8 +63,6 @@ func reducePlaylistItems(var res: [Playlist], item: PlaylistItem) -> [Playlist] 
         lastPlaylist.append(item)
         res[0] = lastPlaylist
         return res
-    default:
-        return res
     }
 }
 
@@ -72,10 +70,10 @@ func playlistItemsToPlaylists(items: [PlaylistItem]) -> [Playlist] {
     return items.reduce([Playlist](), combine: reducePlaylistItems).reverse()
 }
 
-func decodeDataToPlaylists(data: NSData) -> [PlaylistItem] {
+func decodeDataToPlaylists(data: NSData) -> [Playlist] {
     let tokenFile = tokenizeData(data)
     let playlistItems = tokenFile.map(tokenLineToPlaylistItem).filter({$0 != nil}).map({$0!})
-    return playlistItems
+    return playlistItemsToPlaylists(playlistItems)
 }
 
 func renderPlaylistItem(item: PlaylistItem, formatter: PlaylistItem -> String) -> String {
@@ -96,12 +94,9 @@ func mdFormat(item: PlaylistItem) -> String {
         return "## \(title)"
     case .Track(let artist, let track):
         return "* \(artist) \(tokenDelimiter) \(track)"
-    default:
-        return ""
     }
 }
 
 let data = NSFileHandle.fileHandleWithStandardInput().availableData
-let playlistItems = decodeDataToPlaylists(data)
-let playlists = playlistItemsToPlaylists(playlistItems)
+let playlists = decodeDataToPlaylists(data)
 print(renderPlaylists(playlists, formatter: mdFormat))
