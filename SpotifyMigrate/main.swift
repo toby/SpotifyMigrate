@@ -1,6 +1,6 @@
 //
 //  main.swift
-//  SpotifyMigrate
+//  Spotify Migrate -- Get your playlists out of Spotify
 //
 //  Created by Toby Padilla on 7/6/15.
 //  Copyright © 2015 Toby Padilla. All rights reserved.
@@ -96,7 +96,7 @@ func mdFormat(item: PlaylistItem) -> String {
     case .PlaylistTitle(let title):
         return "## \(title)"
     case .Track(let artist, let track):
-        return "* \(artist) - \(track)"
+        return "* \(artist) \(tokenDelimiter) \(track)"
     default:
         return ""
     }
